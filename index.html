@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realizar Pedido - Gerisín</title>
+    <style>
+        :root {
+            --primary: #5c4033;
+            --primary-dark: #3b2820;
+            --bg: #f5f2eb;
+            --card-bg: #fffdf9;
+            --card-border: #e6dfd5;
+            --text: #2c221e;
+            --accent-danger: #9a031e;
+            --beige-dark: #e8e1d5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(60, 40, 30, 0.08);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--card-border);
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-qty {
+            width: 48px;
+            height: 48px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            background: var(--beige-dark);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:active {
+            background: var(--primary-dark);
+        }
+
+        .summary-badge {
+            background: var(--beige-dark);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<datalist id="clientsDatalist"></datalist>
+
+<div class="container">
+    <header>
+        <h1>🛍️ Registra tu Pedido</h1>
+        <p id="eventTitle" style="font-size:0.9rem; color:var(--primary); font-weight:bold; margin-top:5px;"></p>
+    </header>
+
+    <form id="clientOrderForm" onsubmit="handleSendOrder(event)">
+        <div class="form-group">
+            <label>Tu Nombre Completo</label>
+            <input type="text" id="clientName" list="clientsDatalist" class="form-control" placeholder="Escribe tu nombre..." onchange="autoFillPhone()" oninput="autoFillPhone()" required>
+        </div>
+
+        <div class="form-group">
+            <label>Número de WhatsApp (10 dígitos)</label>
+            <input type="tel" id="clientPhone" class="form-control" placeholder="Ej. 9931234567" required>
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad de Productos</label>
+            <div class="qty-controls">
+                <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
+                <input type="number" id="orderQty" class="form-control" min="1" value="1" style="text-align:center; font-size:1.2rem; font-weight:bold;" onchange="calculateTotal()" onkeyup="calculateTotal()" required>
+                <button type="button" class="btn-qty" onclick="changeQty(1)">+</button>
+            </div>
+        </div>
+
+        <div class="summary-badge">
+            Total a Pagar: $<span id="calculatedTotal">0.00</span>
+            <div style="font-size:0.75rem; color:var(--accent-danger); font-weight:normal; margin-top:3px;">
+                🔴 Pago pendiente al recibir su pedido.
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">📩 Enviar Pedido</button>
+    </form>
+</div>
+
+<script>
+    let db = { config: { scriptUrl: '' }, sales: [], orders: [], clients: {} };
+    let currentSale = null;
+
+    window.onload = function() {
+        const localData = localStorage.getItem('gerisin_sales_db');
+        if (localData) {
+            try { db = JSON.parse(localData); } catch(e){}
+        }
+        
+        // Obtener venta activa
+        if (db.sales && db.sales.length > 0) {
+            currentSale = db.sales[db.sales.length - 1]; // Toma la última venta registrada
+            document.getElementById('eventTitle').innerText = `${currentSale.title} ($${currentSale.price.toFixed(2)} c/u)`;
+        } else {
+            document.getElementById('eventTitle').innerText = 'Venta Activa';
+        }
+
+        // Cargar catálogo de clientes
+        if (db.orders) {
+            db.orders.forEach(o => {
+                if (o.client && o.phone) db.clients[o.client.trim().toLowerCase()] = o.phone.trim();
+            });
+        }
+        updateDatalist();
+        calculateTotal();
+    };
+
+    function updateDatalist() {
+        const dl = document.getElementById('clientsDatalist');
+        dl.innerHTML = Object.keys(db.clients).map(k => `<option value="${k.replace(/\b\w/g, l => l.toUpperCase())}">`).join('');
+    }
+
+    function autoFillPhone() {
+        const name = document.getElementById('clientName').value.trim().toLowerCase();
+        if (db.clients[name]) {
+            document.getElementById('clientPhone').value = db.clients[name];
+        }
+    }
+
+    function changeQty(delta) {
+        const input = document.getElementById('orderQty');
+        let val = parseInt(input.value) || 1;
+        val += delta;
+        if (val < 1) val = 1;
+        input.value = val;
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        const price = currentSale ? currentSale.price : 0;
+        const qty = parseInt(document.getElementById('orderQty').value) || 0;
+        document.getElementById('calculatedTotal').innerText = (qty * price).toFixed(2);
+    }
+
+    function handleSendOrder(e) {
+        e.preventDefault();
+        if (!currentSale) {
+            alert("No hay una venta activa configurada actualmente.");
+            return;
+        }
+
+        const client = document.getElementById('clientName').value.trim();
+        const phone = document.getElementById('clientPhone').value.trim();
+        const qty = parseInt(document.getElementById('orderQty').value);
+        const total = qty * currentSale.price;
+
+        const newOrder = {
+            id: 'ORD_' + Date.now(),
+            saleId: currentSale.id,
+            client: client,
+            phone: phone,
+            qty: qty,
+            total: total,
+            status: 'Debe',
+            abono: 0,
+            debt: total,
+            delivered: false,
+            datetime: new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
+        };
+
+        db.orders.push(newOrder);
+        db.clients[client.toLowerCase()] = phone;
+        localStorage.setItem('gerisin_sales_db', JSON.stringify(db));
+
+        // Sincronizar a Google Sheets si hay URL configurada
+        if (db.config && db.config.scriptUrl) {
+            fetch(db.config.scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'ORDER', ...newOrder })
+            }).catch(err => console.log('Sync error:', err));
+        }
+
+        alert("✅ ¡Tu pedido ha sido registrado correctamente! Se guardó con estado NO PAGADO.");
+        document.getElementById('clientOrderForm').reset();
+        document.getElementById('orderQty').value = 1;
+        calculateTotal();
+    }
+</script>
+
+</body>
+</html>
