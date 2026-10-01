@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realizar Pedido - Gerisín</title>
+    <!-- Librería para generar e imprevistar la imagen del ticket -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary: #5c4033;
@@ -13,6 +15,7 @@
             --card-border: #e6dfd5;
             --text: #2c221e;
             --accent-danger: #9a031e;
+            --accent-success: #386641;
             --beige-dark: #e8e1d5;
         }
 
@@ -111,6 +114,14 @@
             background: var(--primary-dark);
         }
 
+        .btn-success {
+            background: var(--accent-success);
+        }
+
+        .btn-secondary {
+            background: #6e6057;
+        }
+
         .summary-badge {
             background: var(--beige-dark);
             padding: 12px;
@@ -120,6 +131,29 @@
             color: var(--primary);
             margin-bottom: 15px;
         }
+
+        #ticketSquareContainer {
+            width: 280px;
+            height: 280px;
+            background: #fffdf9;
+            border: 2px solid var(--primary);
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 15px auto;
+            color: #2c221e;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 6px;
+        }
+
+        .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -128,14 +162,15 @@
 
 <div class="container">
     <header>
-        <h1>🛍️ Registra tu Pedido</h1>
-        <p id="eventTitle" style="font-size:0.9rem; color:var(--primary); font-weight:bold; margin-top:5px;"></p>
+        <h1>🌮 Registra tu Pedido</h1>
+        <p id="eventTitle" style="font-size:0.9rem; color:var(--primary); font-weight:bold; margin-top:5px;">Venta #3 - Tacos</p>
     </header>
 
+    <!-- FORMULARIO DE CAPTURA -->
     <form id="clientOrderForm" onsubmit="handleSendOrder(event)">
         <div class="form-group">
             <label>Tu Nombre Completo</label>
-            <input type="text" id="clientName" list="clientsDatalist" class="form-control" placeholder="Escribe tu nombre..." onchange="autoFillPhone()" oninput="autoFillPhone()" required>
+            <input type="text" id="clientName" list="clientsDatalist" class="form-control" placeholder="Selecciona o escribe tu nombre..." onchange="autoFillPhone()" oninput="autoFillPhone()" required>
         </div>
 
         <div class="form-group">
@@ -144,7 +179,7 @@
         </div>
 
         <div class="form-group">
-            <label>Cantidad de Productos</label>
+            <label>Cantidad de Pedido (Ordenes/Tacos)</label>
             <div class="qty-controls">
                 <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
                 <input type="number" id="orderQty" class="form-control" min="1" value="1" style="text-align:center; font-size:1.2rem; font-weight:bold;" onchange="calculateTotal()" onkeyup="calculateTotal()" required>
@@ -159,29 +194,71 @@
             </div>
         </div>
 
-        <button type="submit" class="btn-submit">📩 Enviar Pedido</button>
+        <button type="submit" class="btn-submit">📩 Realizar Pedido</button>
     </form>
+
+    <!-- RESUMEN Y ACCIONES TRAS REALIZAR EL PEDIDO -->
+    <div id="orderSuccessView" style="display: none; text-align: center;">
+        <h2 style="color: var(--accent-success); margin-bottom: 5px;">¡Muchas Gracias por tu Compra! 🎉</h2>
+        <p style="font-size: 0.9rem; color: var(--text);">Tu pedido de <b>Tacos</b> ha sido registrado correctamente.</p>
+
+        <!-- TICKET CUADRADO PARA DESCARGAR -->
+        <div id="ticketSquareContainer">
+            <div>
+                <div style="font-weight: bold; font-size: 1rem; text-align:center;">GERISÍN - TACOS</div>
+                <div style="font-size: 0.7rem; border-bottom: 1px dashed #2c221e; padding-bottom: 4px; text-align:center;" id="tkDate"></div>
+            </div>
+            <div style="text-align: left; font-size: 0.8rem; display: grid; gap: 4px;">
+                <div><b>Cliente:</b> <span id="tkClient"></span></div>
+                <div><b>WhatsApp:</b> <span id="tkPhone"></span></div>
+                <div><b>Producto:</b> <span id="tkProduct">Tacos</span></div>
+                <div><b>Cantidad:</b> <span id="tkQty"></span></div>
+                <div><b>Total:</b> $<span id="tkTotal"></span></div>
+                <div><b>Estado:</b> <span style="color:var(--accent-danger); font-weight:bold;">No Pagado</span></div>
+            </div>
+            <div style="font-size: 0.7rem; border-top: 1px dashed #2c221e; padding-top: 4px; text-align:center;">
+                ¡Gracias por su preferencia!
+            </div>
+        </div>
+
+        <div class="actions-group">
+            <button class="btn-submit btn-success" onclick="shareWhatsAppMessage()">📲 Compartir Pedido por WhatsApp</button>
+            <button class="btn-submit" onclick="downloadTicketImage()">💾 Descargar Imagen de Ticket</button>
+            <button class="btn-submit btn-secondary" onclick="resetOrderView()">➕ Hacer otro pedido</button>
+        </div>
+    </div>
 </div>
 
 <script>
     let db = { config: { scriptUrl: '' }, sales: [], orders: [], clients: {} };
     let currentSale = null;
+    let lastCreatedOrder = null;
+    const TARGET_PHONE = "93385743"; // Número de destino para el pedido
 
     window.onload = function() {
         const localData = localStorage.getItem('gerisin_sales_db');
         if (localData) {
             try { db = JSON.parse(localData); } catch(e){}
         }
-        
-        // Obtener venta activa
-        if (db.sales && db.sales.length > 0) {
-            currentSale = db.sales[db.sales.length - 1]; // Toma la última venta registrada
-            document.getElementById('eventTitle').innerText = `${currentSale.title} ($${currentSale.price.toFixed(2)} c/u)`;
+
+        if (!db.clients) db.clients = {};
+
+        // 1. Relacionar a la Venta #3 de Tacos
+        if (db.sales && db.sales.length >= 3) {
+            currentSale = db.sales[2]; // Índice 2 equivale a la Venta #3
         } else {
-            document.getElementById('eventTitle').innerText = 'Venta Activa';
+            // Si no existe la venta 3 en la BD local, se busca o define por defecto
+            currentSale = db.sales.find(s => s.id === 'SALE_3' || s.title.toLowerCase().includes('taco')) || {
+                id: 'SALE_3',
+                title: 'Venta #3 - Tacos',
+                price: 15.00,
+                date: new Date().toISOString().split('T')[0]
+            };
         }
 
-        // Cargar catálogo de clientes
+        document.getElementById('eventTitle').innerText = `${currentSale.title} ($${currentSale.price.toFixed(2)} c/u)`;
+
+        // Cargar catálogo de clientes desde el historial de pedidos y diccionario
         if (db.orders) {
             db.orders.forEach(o => {
                 if (o.client && o.phone) db.clients[o.client.trim().toLowerCase()] = o.phone.trim();
@@ -220,17 +297,14 @@
 
     function handleSendOrder(e) {
         e.preventDefault();
-        if (!currentSale) {
-            alert("No hay una venta activa configurada actualmente.");
-            return;
-        }
 
         const client = document.getElementById('clientName').value.trim();
         const phone = document.getElementById('clientPhone').value.trim();
         const qty = parseInt(document.getElementById('orderQty').value);
         const total = qty * currentSale.price;
+        const dateStr = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
 
-        const newOrder = {
+        lastCreatedOrder = {
             id: 'ORD_' + Date.now(),
             saleId: currentSale.id,
             client: client,
@@ -241,27 +315,68 @@
             abono: 0,
             debt: total,
             delivered: false,
-            datetime: new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
+            datetime: dateStr
         };
 
-        db.orders.push(newOrder);
+        // Guardar pedido y agregar/actualizar cliente en la lista
+        db.orders.push(lastCreatedOrder);
         db.clients[client.toLowerCase()] = phone;
         localStorage.setItem('gerisin_sales_db', JSON.stringify(db));
 
-        // Sincronizar a Google Sheets si hay URL configurada
+        // Sincronizar con Google Sheets si existe URL
         if (db.config && db.config.scriptUrl) {
             fetch(db.config.scriptUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'ORDER', ...newOrder })
+                body: JSON.stringify({ type: 'ORDER', ...lastCreatedOrder })
             }).catch(err => console.log('Sync error:', err));
         }
 
-        alert("✅ ¡Tu pedido ha sido registrado correctamente! Se guardó con estado NO PAGADO.");
+        // Mostrar vista de éxito y llenar ticket
+        document.getElementById('tkDate').innerText = dateStr;
+        document.getElementById('tkClient').innerText = client;
+        document.getElementById('tkPhone').innerText = phone;
+        document.getElementById('tkProduct').innerText = currentSale.title;
+        document.getElementById('tkQty').innerText = `${qty} pzs`;
+        document.getElementById('tkTotal').innerText = total.toFixed(2);
+
+        document.getElementById('clientOrderForm').style.display = 'none';
+        document.getElementById('orderSuccessView').style.display = 'block';
+    }
+
+    function downloadTicketImage() {
+        const ticketEl = document.getElementById('ticketSquareContainer');
+        html2canvas(ticketEl, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Ticket_${lastCreatedOrder.client}_Tacos.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+
+    function shareWhatsAppMessage() {
+        if (!lastCreatedOrder) return;
+
+        let msg = `Hola, realizo un pedido para *${lastCreatedOrder.client}*:\n\n`;
+        msg += `• *Producto:* ${currentSale.title}\n`;
+        msg += `• *Cantidad:* ${lastCreatedOrder.qty} pzs\n`;
+        msg += `• *Total:* $${lastCreatedOrder.total.toFixed(2)}\n`;
+        msg += `• *Estado:* Pendiente de pago al recibir\n`;
+        msg += `• *WhatsApp del cliente:* ${lastCreatedOrder.phone}\n\n`;
+        msg += `¡Adjunto la imagen de mi pedido!`;
+
+        const url = `https://wa.me/52${TARGET_PHONE}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    }
+
+    function resetOrderView() {
         document.getElementById('clientOrderForm').reset();
         document.getElementById('orderQty').value = 1;
         calculateTotal();
+        document.getElementById('orderSuccessView').style.display = 'none';
+        document.getElementById('clientOrderForm').style.display = 'block';
+        updateDatalist();
     }
 </script>
 
