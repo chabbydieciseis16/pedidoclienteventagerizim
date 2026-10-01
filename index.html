@@ -1,8 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realizar Pedido - Gerisín</title>
+    <!-- Librería para generar la imagen del ticket -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #5c4033;
+            --primary-dark: #3b2820;
+            --bg: #f5f2eb;
+            --card-bg: #fffdf9;
+            --card-border: #e6dfd5;
+            --text: #2c221e;
+            --accent-danger: #9a031e;
+            --accent-success: #386641;
+            --beige-dark: #e8e1d5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(60, 40, 30, 0.08);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--card-border);
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-qty {
+            width: 48px;
+            height: 48px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            background: var(--beige-dark);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:active {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--accent-success);
+        }
+
+        .btn-secondary {
+            background: #6e6057;
+        }
+
+        .summary-badge {
+            background: var(--beige-dark);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        #ticketSquareContainer {
+            width: 280px;
+            height: 280px;
+            background: #fffdf9;
+            border: 2px solid var(--primary);
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 15px auto;
+            color: #2c221e;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 6px;
+        }
+
+        .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<datalist id="clientsDatalist"></datalist>
+
+<div class="container">
+    <header>
+        <h1>🌮 Registra tu Pedido</h1>
+        <p id="eventTitle" style="font-size:0.9rem; color:var(--primary); font-weight:bold; margin-top:5px;">Venta #3 - Tacos ($12.00 c/u)</p>
+    </header>
+
+    <!-- FORMULARIO DE CAPTURA DE PEDIDO -->
+    <form id="clientOrderForm" onsubmit="handleSendOrder(event)">
+        <div class="form-group">
+            <label>Tu Nombre Completo</label>
+            <input type="text" id="clientName" list="clientsDatalist" class="form-control" placeholder="Selecciona o escribe tu nombre..." onchange="autoFillPhone()" oninput="autoFillPhone()" required>
+        </div>
+
+        <div class="form-group">
+            <label>Número de WhatsApp (10 dígitos)</label>
+            <input type="tel" id="clientPhone" class="form-control" placeholder="Ej. 9931234567" required>
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad de Pedido (Órdenes/Tacos)</label>
+            <div class="qty-controls">
+                <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
+                <input type="number" id="orderQty" class="form-control" min="1" value="1" style="text-align:center; font-size:1.2rem; font-weight:bold;" onchange="calculateTotal()" onkeyup="calculateTotal()" required>
+                <button type="button" class="btn-qty" onclick="changeQty(1)">+</button>
+            </div>
+        </div>
+
+        <div class="summary-badge">
+            Total a Pagar: $<span id="calculatedTotal">12.00</span>
+            <div style="font-size:0.75rem; color:var(--accent-danger); font-weight:normal; margin-top:3px;">
+                🔴 Pago pendiente al recibir su pedido.
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">📩 Realizar Pedido</button>
+    </form>
+
+    <!-- VISTA DE ÉXITO Y GENERACIÓN DE TICKET -->
+    <div id="orderSuccessView" style="display: none; text-align: center;">
+        <h2 style="color: var(--accent-success); margin-bottom: 5px;">¡Muchas Gracias por tu Compra! 🎉</h2>
+        <p style="font-size: 0.9rem; color: var(--text);">Tu pedido de <b>Tacos</b> ha sido registrado correctamente.</p>
+
+        <!-- TICKET CUADRADO PARA DESCARGAR -->
+        <div id="ticketSquareContainer">
+            <div>
+                <div style="font-weight: bold; font-size: 1rem; text-align:center;">GERISÍN - TACOS</div>
+                <div style="font-size: 0.7rem; border-bottom: 1px dashed #2c221e; padding-bottom: 4px; text-align:center;" id="tkDate"></div>
+            </div>
+            <div style="text-align: left; font-size: 0.8rem; display: grid; gap: 4px;">
+                <div><b>Cliente:</b> <span id="tkClient"></span></div>
+                <div><b>WhatsApp:</b> <span id="tkPhone"></span></div>
+                <div><b>Producto:</b> <span id="tkProduct">Tacos</span></div>
+                <div><b>Cantidad:</b> <span id="tkQty"></span></div>
+                <div><b>Total:</b> $<span id="tkTotal"></span></div>
+                <div><b>Estado:</b> <span style="color:var(--accent-danger); font-weight:bold;">No Pagado</span></div>
+            </div>
+            <div style="font-size: 0.7rem; border-top: 1px dashed #2c221e; padding-top: 4px; text-align:center;">
+                ¡Gracias por su preferencia!
+            </div>
+        </div>
+
+        <div class="actions-group">
+            <button class="btn-submit btn-success" onclick="shareWhatsAppMessage()">📲 Compartir Pedido por WhatsApp</button>
+            <button class="btn-submit" onclick="downloadTicketImage()">💾 Descargar Imagen de Ticket</button>
+            <button class="btn-submit btn-secondary" onclick="resetOrderView()">➕ Hacer otro pedido</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let db = { config: { scriptUrl: '' }, sales: [], orders: [], clients: {} };
     let currentSale = null;
     let lastCreatedOrder = null;
-    const TARGET_PHONE = "93385743";
+    const TARGET_PHONE = "9933857413"; // Número de WhatsApp corregido
 
     window.onload = function() {
         const localData = localStorage.getItem('gerisin_sales_db');
@@ -12,10 +243,10 @@
 
         if (!db.clients) db.clients = {};
 
-        // Se asigna la venta con el precio corregido a $12.00
+        // Configuración y relación obligatoria con la Venta #3 de Tacos a $12.00
         if (db.sales && db.sales.length >= 3) {
             currentSale = db.sales[2];
-            currentSale.price = 12.00; // Garantiza que sea $12.00
+            currentSale.price = 12.00;
         } else {
             currentSale = db.sales.find(s => s.id === 'SALE_3' || s.title.toLowerCase().includes('taco')) || {
                 id: 'SALE_3',
@@ -27,6 +258,7 @@
 
         document.getElementById('eventTitle').innerText = `${currentSale.title} ($${currentSale.price.toFixed(2)} c/u)`;
 
+        // Cargar diccionario de clientes registrados
         if (db.orders) {
             db.orders.forEach(o => {
                 if (o.client && o.phone) db.clients[o.client.trim().toLowerCase()] = o.phone.trim();
@@ -86,10 +318,12 @@
             datetime: dateStr
         };
 
+        // Guardar el pedido y precargar/actualizar la lista de clientes
         db.orders.push(lastCreatedOrder);
         db.clients[client.toLowerCase()] = phone;
         localStorage.setItem('gerisin_sales_db', JSON.stringify(db));
 
+        // Sincronizar en segundo plano con Google Sheets
         if (db.config && db.config.scriptUrl) {
             fetch(db.config.scriptUrl, {
                 method: 'POST',
@@ -99,6 +333,7 @@
             }).catch(err => console.log('Sync error:', err));
         }
 
+        // Cargar los datos en el ticket
         document.getElementById('tkDate').innerText = dateStr;
         document.getElementById('tkClient').innerText = client;
         document.getElementById('tkPhone').innerText = phone;
@@ -106,6 +341,7 @@
         document.getElementById('tkQty').innerText = `${qty} pzs`;
         document.getElementById('tkTotal').innerText = total.toFixed(2);
 
+        // Cambiar vista al resumen
         document.getElementById('clientOrderForm').style.display = 'none';
         document.getElementById('orderSuccessView').style.display = 'block';
     }
@@ -144,3 +380,6 @@
         updateDatalist();
     }
 </script>
+
+</body>
+</html>
