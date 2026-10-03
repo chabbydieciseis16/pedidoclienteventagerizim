@@ -3,690 +3,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control Departamental - Escuela Sabática | Automática Viva</title>
+    <title>Realizar Pedido - Gerizim</title>
+    <!-- Librería para generar la imagen del ticket -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --navy-bar: #0b192c;       
-            --bg-gray: #e2e8f0;        
-            --royal-blue: #004687;     
-            --white: #ffffff;          
-            --border: #cbd5e1;
-            --accent-teal: #0d9488;
-            --danger: #b91c1c;
+            --primary: #5c4033;
+            --primary-dark: #3b2820;
+            --bg: #f5f2eb;
+            --card-bg: #fffdf9;
+            --card-border: #e6dfd5;
+            --text: #2c221e;
+            --accent-danger: #9a031e;
+            --accent-success: #386641;
+            --beige-dark: #e8e1d5;
         }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg-gray); color: #1e293b; margin: 0; padding: 20px; }
-        .container { max-width: 1450px; margin: 0 auto; }
-        
-        header { 
-            background: var(--navy-bar); color: white; padding: 15px 25px; border-radius: 8px; 
-            margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-        }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .company-logo {
-            background: linear-gradient(135deg, #00d2ff, #004687); color: white; font-weight: bold;
-            font-size: 11px; text-transform: uppercase; letter-spacing: 1px; width: 130px; height: 45px;
-            display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 6px;
-            border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        header h1 { margin: 0; font-size: 20px; font-weight: 600; }
-        
-        .church-banner { background: #f8fafc; border-left: 5px solid var(--royal-blue); padding: 10px 15px; margin-bottom: 20px; border-radius: 4px; font-size: 13px; display: flex; gap: 20px; flex-wrap: wrap; }
-        .church-banner span { font-weight: bold; color: var(--navy-bar); }
-        
-        .tabs { 
-            background: var(--navy-bar); padding: 10px 15px; display: flex; gap: 5px; 
-            margin-bottom: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap;
-        }
-        .tab-btn { 
-            background: rgba(255, 255, 255, 0.15); border: none; padding: 10px 12px; cursor: pointer; 
-            font-weight: bold; border-radius: 4px; color: #ffffff; transition: all 0.3s ease; font-size: 12px;
-        }
-        .tab-btn:hover { background: rgba(255, 255, 255, 0.3); }
-        .tab-btn.active { background: var(--royal-blue); color: white; border-bottom: 2px solid #00d2ff; }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
-        .card { background: #ffffff; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        h2 { color: var(--navy-bar); margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 17px; }
-        
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; color: var(--navy-bar); }
-        
-        input, select, textarea { 
-            width: 100%; padding: 10px; background-color: var(--white) !important; color: var(--royal-blue) !important; 
-            font-weight: 600; border: 2px solid var(--border); border-radius: 6px; font-size: 14px;
-        }
-        input[type="checkbox"] { width: auto; margin-right: 6px; transform: scale(1.2); }
-        
-        button.btn-submit { 
-            background: var(--royal-blue); color: white; border: none; padding: 12px 15px; border-radius: 6px; 
-            cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 14px;
-        }
-        button.btn-submit:hover { background: var(--navy-bar); }
-        
-        .btn-action { padding: 4px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; margin-right: 4px; }
-        .btn-edit { background: #eab308; color: black; }
-        .btn-delete { background: var(--danger); color: white; }
-        .btn-mass { padding: 8px 14px; font-size: 12px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; color: white; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; background: white; }
-        th, td { border: 1px solid var(--border); padding: 9px; text-align: left; }
-        th { background: var(--navy-bar); color: white; }
-        tr:nth-child(even) { background: #f8fafc; }
-        tr.total-row { background: #e0f2fe !important; font-weight: bold; color: var(--navy-bar); border-top: 2px solid var(--royal-blue); }
-        tr.disabled-row { background: #f1f5f9 !important; color: #94a3b8; font-style: italic; }
-        tr.inactive-member { background: #fee2e2 !important; color: #991b1b; }
-
-        .avatar-preview { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #cbd5e1; display: inline-block; cursor: pointer; border: 2px dashed var(--royal-blue); transition: transform 0.2s; }
-        .avatar-preview:hover { transform: scale(1.1); background: #94a3b8; }
-        .gp-logo { width: 35px; height: 35px; object-fit: cover; border-radius: 4px; }
-        .flex-inline { display: flex; gap: 10px; }
-        .flex-inline .form-group { flex: 1; }
-        .gp-weekly-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 20px; align-items: center; }
-
-        .select-inline-table { padding: 4px 6px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px; width: auto; min-width: 120px; }
-        .input-search-table { padding: 8px 12px; font-size: 13px; border: 2px solid var(--border); border-radius: 6px; width: 280px; }
-
-        /* MODALES POP-UP */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-            display: none; justify-content: center; align-items: center; z-index: 10000;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        .modal-box {
-            background: white; padding: 25px; border-radius: 12px;
-            width: 100%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
-            border: 1px solid var(--border); animation: modalShow 0.2s ease-out;
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
         }
-        @keyframes modalShow { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-        .modal-header h3 { margin: 0; color: var(--navy-bar); }
-        .close-modal { background: none; border: none; font-size: 22px; font-weight: bold; color: #64748b; cursor: pointer; }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(60, 40, 30, 0.08);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--card-border);
+            padding-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-qty {
+            width: 48px;
+            height: 48px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            background: var(--beige-dark);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-submit:active {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--accent-success);
+        }
+
+        .btn-secondary {
+            background: #6e6057;
+        }
+
+        .summary-badge {
+            background: var(--beige-dark);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        #ticketSquareContainer {
+            width: 280px;
+            height: 280px;
+            background: #fffdf9;
+            border: 2px solid var(--primary);
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 15px auto;
+            color: #2c221e;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 6px;
+        }
+
+        .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
-<!-- Input oculto para cambiar la foto desde la tabla -->
-<input type="file" id="global_table_photo_input" accept="image/*" style="display:none;">
+<datalist id="clientsDatalist"></datalist>
 
 <div class="container">
     <header>
-        <div class="logo-container">
-            <div class="company-logo">AUTOMÁTICA VIVA</div>
-            <div>
-                <h1>⛪ Sistema de Control Departamental - Escuela Sabática</h1>
-                <p style="margin: 3px 0 0 0; font-size: 12px; opacity: 0.8; color: #00d2ff;">Panel de Miembros con Buscador Intuitivo y Ordenamiento Multicriterio</p>
-            </div>
-        </div>
-        <div class="backup-btns">
-            <button class="btn-alt" onclick="exportarDatos()">📥 Exportar Respaldo</button>
-            <button class="btn-alt" onclick="importarDatos()">📤 Importar Respaldo</button>
-        </div>
+        <h1>🌮 Registra tu Pedido</h1>
+        <p id="eventTitle" style="font-size:0.9rem; color:var(--primary); font-weight:bold; margin-top:5px;">Venta #3 - Tacos ($12.00 c/u)</p>
     </header>
 
-    <div class="church-banner" id="banner-iglesia">
-        <div>⛪ Iglesia: <span id="lbl-iglesia">No Configurada</span></div>
-        <div>📆 Periodo: <span id="lbl-periodo">-</span></div>
-        <div>Distrito: <span id="lbl-distrito">-</span></div>
-    </div>
+    <!-- FORMULARIO DE CAPTURA DE PEDIDO -->
+    <form id="clientOrderForm" onsubmit="handleSendOrder(event)">
+        <div class="form-group">
+            <label>Tu Nombre Completo</label>
+            <input type="text" id="clientName" list="clientsDatalist" class="form-control" placeholder="Selecciona o escribe tu nombre..." onchange="autoFillPhone()" oninput="autoFillPhone()" required>
+        </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-config')">⚙️ 1. Configuración & GPs</button>
-        <button class="tab-btn" onclick="switchTab('tab-miembros')">👤 2. Control de Miembros</button>
-        <button class="tab-btn" onclick="switchTab('tab-asistencia')">📝 3. Pase de Lista Semanal</button>
-        <button class="tab-btn" onclick="switchTab('tab-inf-sabados')">📈 4. Totales por Sábado</button>
-        <button class="tab-btn" onclick="switchTab('tab-inf-grupos')">🏆 5. Totales por GP Semanal</button>
-        <button class="tab-btn" onclick="switchTab('tab-inf-depts')">📊 6. Informe por Departamentos</button>
-        <button class="tab-btn" onclick="switchTab('tab-inf-infantil-cron')">👶 7. Informe Infantil por Fecha</button>
-    </div>
+        <div class="form-group">
+            <label>Número de WhatsApp (10 dígitos)</label>
+            <input type="tel" id="clientPhone" class="form-control" placeholder="Ej. 9931234567" required>
+        </div>
 
-    <!-- PESTAÑA 1 -->
-    <div id="tab-config" class="tab-content active">
-        <div class="grid-2">
+        <div class="form-group">
+            <label>Cantidad de Pedido (Órdenes/Tacos)</label>
+            <div class="qty-controls">
+                <button type="button" class="btn-qty" onclick="changeQty(-1)">-</button>
+                <input type="number" id="orderQty" class="form-control" min="1" value="1" style="text-align:center; font-size:1.2rem; font-weight:bold;" onchange="calculateTotal()" onkeyup="calculateTotal()" required>
+                <button type="button" class="btn-qty" onclick="changeQty(1)">+</button>
+            </div>
+        </div>
+
+        <div class="summary-badge">
+            Total a Pagar: $<span id="calculatedTotal">12.00</span>
+            <div style="font-size:0.75rem; color:var(--accent-danger); font-weight:normal; margin-top:3px;">
+                🔴 Pago pendiente al recibir su pedido.
+            </div>
+        </div>
+
+        <button type="submit" class="btn-submit">📩 Realizar Pedido</button>
+    </form>
+
+    <!-- VISTA DE ÉXITO Y GENERACIÓN DE TICKET -->
+    <div id="orderSuccessView" style="display: none; text-align: center;">
+        <h2 style="color: var(--accent-success); margin-bottom: 5px;">¡Muchas Gracias por tu Compra! 🎉</h2>
+        <p style="font-size: 0.9rem; color: var(--text);">Tu pedido de <b>Tacos</b> ha sido registrado correctamente.</p>
+
+        <!-- TICKET CUADRADO PARA DESCARGAR -->
+        <div id="ticketSquareContainer">
             <div>
-                <div class="card">
-                    <h2>Configuración Trimestral</h2>
-                    <div class="flex-inline">
-                        <div class="form-group"><label>Año:</label><select id="cfg_year" onchange="procesarCalendarioTrimestral()"><option value="2026">2026</option><option value="2027">2027</option></select></div>
-                        <div class="form-group"><label>Trimestre:</label><select id="cfg_trimestre" onchange="procesarCalendarioTrimestral()"><option value="1">1º</option><option value="2">2º</option><option value="3" selected>3º</option><option value="4">4º</option></select></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <h2>Datos Generales de la Iglesia</h2>
-                    <form onsubmit="guardarIglesia(event)">
-                        <div class="form-group"><label>Iglesia:</label><input type="text" id="ch_nombre" required></div>
-                        <div class="form-group"><label>Lugar:</label><input type="text" id="ch_lugar" required></div>
-                        <div class="flex-inline">
-                            <div class="form-group"><label>Distrito:</label><input type="text" id="ch_distrito" required></div>
-                            <div class="form-group"><label>Asociación:</label><input type="text" id="ch_asociacion" required></div>
-                        </div>
-                        <button type="submit" class="btn-submit">Actualizar Iglesia</button>
-                    </form>
-                </div>
-                <div class="card">
-                    <h2>Crear Nuevo Grupo Pequeño</h2>
-                    <form onsubmit="guardarGP(event, false)">
-                        <div class="form-group"><label>Número de GP:</label><input type="number" id="gp_id" min="1" required></div>
-                        <div class="form-group"><label>Nombre del GP:</label><input type="text" id="gp_nombre" required></div>
-                        <div class="form-group">
-                            <label>Clasificación del Grupo Pequeño:</label>
-                            <select id="gp_clasificacion" required>
-                                <option value="Adultos">Adultos</option><option value="Juvenil">Juvenil</option><option value="Infantiles">Departamentos Infantiles</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Subir Logo:</label><input type="file" id="gp_logo_file" accept="image/*"><input type="hidden" id="gp_logo_base64"></div>
-                        <button type="submit" class="btn-submit">Guardar Grupo Pequeño</button>
-                    </form>
-                </div>
+                <div style="font-weight: bold; font-size: 1rem; text-align:center;">GERIZIM - TACOS</div>
+                <div style="font-size: 0.7rem; border-bottom: 1px dashed #2c221e; padding-bottom: 4px; text-align:center;" id="tkDate"></div>
             </div>
-            <div>
-                <div class="card">
-                    <h2>Calendario de Sábados</h2>
-                    <table>
-                        <thead><tr><th>Nº</th><th>Fecha</th><th>¿Lleva Informe?</th><th>Motivo si es Especial</th></tr></thead>
-                        <tbody id="cuerpo-fechas-config"></tbody>
-                    </table>
-                    <button class="btn-submit" style="background:var(--accent-teal);" onclick="guardarExcepcionesFechas()">💾 Guardar Calendario</button>
-                </div>
-                <div class="card">
-                    <h2>Grupos Pequeños Creados</h2>
-                    <table id="tabla-gp">
-                        <thead><tr><th>Nº</th><th>Logo</th><th>Nombre Grupo Pequeño</th><th>Clasificación</th><th>Acciones</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <div style="text-align: left; font-size: 0.8rem; display: grid; gap: 4px;">
+                <div><b>Cliente:</b> <span id="tkClient"></span></div>
+                <div><b>WhatsApp:</b> <span id="tkPhone"></span></div>
+                <div><b>Producto:</b> <span id="tkProduct">Tacos</span></div>
+                <div><b>Cantidad:</b> <span id="tkQty"></span></div>
+                <div><b>Total:</b> $<span id="tkTotal"></span></div>
+                <div><b>Estado:</b> <span style="color:var(--accent-danger); font-weight:bold;">No Pagado</span></div>
+            </div>
+            <div style="font-size: 0.7rem; border-top: 1px dashed #2c221e; padding-top: 4px; text-align:center;">
+                ¡Gracias por su preferencia!
             </div>
         </div>
-    </div>
 
-    <!-- PESTAÑA 2: CONTROL DE MIEMBROS -->
-    <div id="tab-miembros" class="tab-content">
-        <div class="card">
-            <h2>Panel de Miembros de la Iglesia</h2>
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:15px; border-radius:8px; margin-bottom:15px; gap:15px; flex-wrap:wrap;">
-                
-                <!-- 1. Buscador Directo -->
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="margin:0; font-weight:bold;">👤 Buscar Miembro:</label>
-                    <input type="text" id="table_search_input" class="input-search-table" placeholder="Escribe nombre o apellido..." oninput="renderMiembros()" style="background:white!important;">
-                </div>
-
-                <!-- 2. Ordenamiento -->
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="margin:0; font-weight:bold;">🔀 Ordenar por:</label>
-                    <select id="ordenar_criterio_miembros" onchange="renderMiembros()" style="width:200px; padding:6px; background:white!important;">
-                        <option value="id_original">Por orden de Registro</option>
-                        <option value="nombre_az">Nombre (A-Z alfabético)</option>
-                        <option value="nombre_za">Nombre (Z-A)</option>
-                        <option value="edad_menor">Edad (De Menor a Mayor)</option>
-                        <option value="edad_mayor">Edad (De Mayor a Menor)</option>
-                    </select>
-                </div>
-
-                <!-- 3. Filtro Estado -->
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="margin:0; font-weight:bold;">🟢 Estado:</label>
-                    <select id="filtro_estado_miembros" onchange="renderMiembros()" style="width:180px; padding:6px; background:white!important;">
-                        <option value="todos">📋 Mostrar Todos</option>
-                        <option value="activos">🟢 Solo Activos</option>
-                        <option value="inactivos">🔴 Solo Inactivos</option>
-                    </select>
-                </div>
-
-                <button class="btn-mass" style="background:var(--royal-blue);" onclick="abrirModalMiembro(true)">👤 + Registrar Nuevo</button>
-            </div>
-
-            <table id="tabla-miembros">
-                <thead>
-                    <tr>
-                        <th style="width:60px;">Foto</th>
-                        <th>Nombre Completo</th>
-                        <th style="width:140px;">Folleto</th>
-                        <th style="width:110px;">Edad Exacta</th>
-                        <th style="width:200px;">Grupo Pequeño</th>
-                        <th style="text-align:center; width:150px;">¿Estatus Activo?</th>
-                        <th style="width:160px;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <div class="actions-group">
+            <button class="btn-submit btn-success" onclick="shareWhatsAppMessage()">📲 Compartir Pedido por WhatsApp</button>
+            <button class="btn-submit" onclick="downloadTicketImage()">💾 Descargar Imagen de Ticket</button>
+            <button class="btn-submit btn-secondary" onclick="resetOrderView()">➕ Hacer otro pedido</button>
         </div>
-    </div>
-
-    <!-- PESTAÑA 3 -->
-    <div id="tab-asistencia" class="tab-content">
-        <div class="card">
-            <h2>Pase de Lista Semanal</h2>
-            <div class="flex-inline" style="max-width:600px; margin-bottom:15px;">
-                <div class="form-group"><label>Sábado:</label><select id="asig_sabado" onchange="cargarFormularioAsistencia()"></select></div>
-                <div class="form-group"><label>Grupo Pequeño:</label><select id="asig_gp_filtro" onchange="cargarFormularioAsistencia()"></select></div>
-            </div>
-            <div class="gp-weekly-box" id="box-reunion-gp-captura">
-                <input type="checkbox" id="gp_reunido_chk"><label for="gp_reunido_chk" style="font-weight:bold; cursor:pointer; margin:0;">¿Se reunió el GP en la semana?</label>
-                <div style="width:140px;"><label>Miembros:</label><input type="number" id="gp_num_miembros" value="0"></div>
-                <div style="width:140px;"><label>Visitas:</label><input type="number" id="gp_num_visitas" value="0"></div>
-            </div>
-            <div id="msg-sabado-deshabilitado" style="display:none; padding:15px; background:#fee2e2; color:#991b1b; font-weight:bold; border-radius:6px;">⚠️ Sábado Especial (Sin Informe). Motivo: <span id="txt-motivo-deshabilitado"></span></div>
-            <form onsubmit="guardarAsistenciaTrimestral(event)">
-                <table id="tabla-pasar-lista">
-                    <thead><tr><th>Línea</th><th>Pareja Asignada</th><th>Nombre</th><th>Asis</th><th>Estudio (0 o 7)</th><th>Est. Bíblico</th><th>Contactos</th><th>Ayuda</th></tr></thead>
-                    <tbody id="cuerpo-asistencia"></tbody>
-                </table>
-                <button type="submit" id="btn-save-asistencia" class="btn-submit" style="background:var(--accent-teal); max-width:250px; margin-top:15px;">💾 Guardar Datos Semanales</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- INFORMES -->
-    <div id="tab-inf-sabados" class="tab-content"><div class="card"><h2>Totales Consolidados por Sábado</h2><table><thead><tr><th>Fecha Sábado</th><th>Asistencia</th><th>Lec. Fís</th><th>Lec. Dig</th><th>Estudio Fiel (7/7)</th><th>Est. Bíblicos</th><th>Contactos</th><th>Ayuda Social</th><th>GPs Reunidos</th><th>Visitas GP</th></tr></thead><tbody id="cuerpo-informe-sabados"></tbody></table></div></div>
-    <div id="tab-inf-grupos" class="tab-content"><div class="card"><h2>Informe Semanal por Grupo Pequeño</h2><div class="form-group" style="max-width:300px;"><label>Seleccionar Semana:</label><select id="reporte_gp_sabado" onchange="generarInformeGruposPequeños()"></select></div><table><thead><tr><th>Grupo Pequeño</th><th>¿Se reunió?</th><th>Asis. Sábado</th><th>Estudio Fiel</th><th>Est. Bíblicos</th><th>Contactos</th><th>Ayuda Social</th><th>Asis. GP</th><th>Visitas GP</th></tr></thead><tbody id="cuerpo-informe-gps"></tbody></table></div></div>
-    <div id="tab-inf-depts" class="tab-content"><div class="card"><h2>Informe Acumulado por Grandes Departamentos</h2><table><thead><tr><th>Departamento</th><th>Miembros Inscritos</th><th>Asistencia Acumulada</th><th>Estudio Diario Fiel (7/7)</th><th>Estudios Bíblicos</th><th>Contactos Misioneros</th><th>Ayuda Social</th></tr></thead><tbody id="cuerpo-informe-departamentos"></tbody></table></div></div>
-    <div id="tab-inf-infantil-cron" class="tab-content"><div class="card"><h2>Informe del Departamento Infantil por Fecha</h2><table><thead><tr><th>Fecha Sábado</th><th>Niños Inscritos</th><th>Asistencia Niños</th><th>Lección Física Niños</th><th>Lección Digital Niños</th><th>Estudio Diario Fiel</th></tr></thead><tbody id="cuerpo-infantil-cron"></tbody></table></div></div>
-</div>
-
-<!-- MODAL INDEPENDIENTE: MIEMBRO -->
-<div class="modal-overlay" id="modal-miembro-overlay">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 id="modal-m-titulo">Ficha de Miembro</h3>
-            <button class="close-modal" onclick="cerrarModalMiembro()">&times;</button>
-        </div>
-        <form id="form-miembro" onsubmit="guardarMiembro(event)">
-            <input type="hidden" id="edit_m_id" value="-1">
-            <div class="flex-inline">
-                <div class="form-group"><label>Nombre(s):</label><input type="text" id="m_nombre" required></div>
-                <div class="form-group"><label>Apellidos:</label><input type="text" id="m_apellidos" required></div>
-            </div>
-            <div class="flex-inline">
-                <div class="form-group"><label>Nacimiento:</label><input type="date" id="m_fecha_nac" onchange="calcularEdadAutomatica()" required></div>
-                <div class="form-group"><label>Edad / División:</label><input type="text" id="m_edad_ui" readonly style="background:#f1f5f9!important; font-weight:bold;"></div>
-            </div>
-            <div class="form-group"><label>Folleto:</label><select id="m_leccion_tipo"><option value="Fisica">📕 Física</option><option value="Digital">📱 Digital</option><option value="No">❌ No tiene</option></select></div>
-            <div class="form-group"><label>Cargar Foto:</label><input type="file" id="m_foto_file" accept="image/*"><input type="hidden" id="m_foto_base64"></div>
-            <div class="flex-inline" style="background:#f8fafc; padding:10px; border:1px solid var(--border); border-radius:6px; margin-bottom:12px;">
-                <input type="checkbox" id="m_bautizado" onchange="toggleBautismo()"><label for="m_bautizado" style="cursor:pointer; font-weight:bold;">¿Es Bautizado?</label>
-                <div id="box_fecha_bautismo" style="display:none;"><input type="date" id="m_fecha_bautismo"></div>
-            </div>
-            <div class="form-group" style="background:#f0f4f8; padding:10px; border-radius:6px;">
-                <div class="flex-inline">
-                    <div class="form-group"><label>GP:</label><select id="m_gp_id" required></select></div>
-                    <div class="form-group"><label>Pareja Misionera:</label>
-                        <select id="m_pareja_num">
-                            <option value="1">Líder</option><option value="2">Asociado</option>
-                            <option value="3">Pareja 1</option><option value="4">Pareja 2</option><option value="5">Pareja 3</option><option value="6">Pareja 4</option><option value="7">Pareja 5</option><option value="8">Pareja 6</option><option value="9">Pareja 7</option><option value="10">Pareja 8</option><option value="11">Pareja 9</option><option value="12">Pareja 10</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label>Rol:</label><select id="m_pareja_rol"><option value="1">Int. 1</option><option value="2">Int. 2</option></select></div>
-                </div>
-            </div>
-            <button type="submit" class="btn-submit">💾 Guardar Ficha</button>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL INDEPENDIENTE: GRUPO PEQUEÑO -->
-<div class="modal-overlay" id="modal-gp-overlay">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>📝 Modificar Grupo Pequeño</h3>
-            <button class="close-modal" onclick="cerrarModalGP()">&times;</button>
-        </div>
-        <form onsubmit="guardarGP(event, true)">
-            <input type="hidden" id="edit_gp_index" value="-1">
-            <div class="form-group"><label>Número de GP:</label><input type="number" id="edit_gp_id" min="1" required></div>
-            <div class="form-group"><label>Nombre del GP:</label><input type="text" id="edit_gp_nombre" required></div>
-            <div class="form-group">
-                <label>Clasificación de Departamento:</label>
-                <select id="edit_gp_clasificacion" required>
-                    <option value="Adultos">Adultos</option><option value="Juvenil">Juvenil</option><option value="Infantiles">Departamentos Infantiles</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Subir Logo Distintivo:</label><input type="file" id="edit_gp_logo_file" accept="image/*"><input type="hidden" id="edit_gp_logo_base64"></div>
-            <button type="submit" class="btn-submit">💾 Actualizar Datos del Grupo</button>
-        </form>
     </div>
 </div>
 
 <script>
-    let BD_CHURCH = JSON.parse(localStorage.getItem('bd_church')) || { nombre: '', lugar: '', distrito: '', asociacion: '' };
-    let BD_CONFIG = JSON.parse(localStorage.getItem('bd_config')) || { year: '2026', trimestre: '3' };
-    let BD_CALENDARIO = JSON.parse(localStorage.getItem('bd_calendario')) || [];
-    let BD_GRUPOS = JSON.parse(localStorage.getItem('bd_grupos')) || [];
-    let BD_MIEMBROS = JSON.parse(localStorage.getItem('bd_miembros')) || [];
-    let BD_REGISTROS = JSON.parse(localStorage.getItem('bd_registros')) || {};
-    let BD_GP_REUNIONES = JSON.parse(localStorage.getItem('bd_gp_reuniones')) || {};
+    let db = { config: { scriptUrl: '' }, sales: [], orders: [], clients: {} };
+    let currentSale = null;
+    let lastCreatedOrder = null;
+    const TARGET_PHONE = "9933857413"; // Número de WhatsApp corregido
 
-    const SVG_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-4-8-4z'/></svg>";
-    const SVG_LOGO_GP = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23004687'><path d='M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S11.66 5 8 5C6.34 5 5 1.34 5 3s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'/></svg>";
-    const nombresParejas = { 1:"Líder", 2:"Asociado", 3:"Pareja 1", 4:"Pareja 2", 5:"Pareja 3", 6:"Pareja 4", 7:"Pareja 5", 8:"Pareja 6", 9:"Pareja 7", 10:"Pareja 8", 11:"Pareja 9", 12:"Pareja 10" };
-    let currentPhotoMemberId = null;
-
-    function obtenerDepartamento(cat) {
-        if(["Cuna", "Jardín de Infantes", "Primarios", "Menores"].includes(cat)) return "Infantiles";
-        if(["Adolescentes", "Jóvenes"].includes(cat)) return "Juvenil";
-        return "Adultos";
-    }
-
-    // Convertidores
-    document.getElementById('gp_logo_file').addEventListener('change', function(e) {
-        const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = function(ev) { document.getElementById('gp_logo_base64').value = ev.target.result; }; r.readAsDataURL(f); }
-    });
-    document.getElementById('edit_gp_logo_file').addEventListener('change', function(e) {
-        const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = function(ev) { document.getElementById('edit_gp_logo_base64').value = ev.target.result; }; r.readAsDataURL(f); }
-    });
-    document.getElementById('m_foto_file').addEventListener('change', function(e) {
-        const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = function(ev) { document.getElementById('m_foto_base64').value = ev.target.result; }; r.readAsDataURL(f); }
-    });
-
-    function dispararSelectorFotoTabla(idMiembro) { currentPhotoMemberId = idMiembro; document.getElementById('global_table_photo_input').click(); }
-    document.getElementById('global_table_photo_input').addEventListener('change', function(e) {
-        const f = e.target.files[0];
-        if (f && currentPhotoMemberId) {
-            const r = new FileReader(); r.onload = function(ev) {
-                const idx = BD_MIEMBROS.findIndex(m => m.id == currentPhotoMemberId);
-                if(idx > -1) { BD_MIEMBROS[idx].foto = ev.target.result; localStorage.setItem('bd_miembros', JSON.stringify(BD_MIEMBROS)); renderMiembros(); }
-            }; r.readAsDataURL(f);
+    window.onload = function() {
+        const localData = localStorage.getItem('gerisin_sales_db');
+        if (localData) {
+            try { db = JSON.parse(localData); } catch(e){}
         }
-    });
 
-    function abrirModalMiembro(esNuevo) {
-        if(esNuevo) {
-            document.getElementById('form-miembro').reset(); document.getElementById('edit_m_id').value = "-1";
-            document.getElementById('m_foto_base64').value = ''; document.getElementById('m_edad_ui').value = '';
-            document.getElementById('modal-m-titulo').innerText = "👤 Registrar Nuevo Miembro"; toggleBautismo();
-        }
-        document.getElementById('modal-miembro-overlay').style.display = 'flex';
-    }
-    function cerrarModalMiembro() { document.getElementById('modal-miembro-overlay').style.display = 'none'; }
-    function cerrarModalGP() { document.getElementById('modal-gp-overlay').style.display = 'none'; }
+        if (!db.clients) db.clients = {};
 
-    // EDICIÓN DIRECTA EN TABLA
-    function alternarEstatusMiembroDirecto(idMiembro, casilla) {
-        const idx = BD_MIEMBROS.findIndex(m => m.id == idMiembro);
-        if(idx > -1) {
-            BD_MIEMBROS[idx].activo = casilla.checked; localStorage.setItem('bd_miembros', JSON.stringify(BD_MIEMBROS));
-            const fila = casilla.closest('tr'); const txt = casilla.nextElementSibling;
-            if(casilla.checked) { fila.classList.remove('inactive-member'); if(txt) txt.innerText = ' Activo'; } 
-            else { fila.classList.add('inactive-member'); if(txt) txt.innerText = ' Inactivo'; }
-        }
-    }
-    function cambiarFolletoDirecto(idMiembro, selectElement) { const idx = BD_MIEMBROS.findIndex(m => m.id == idMiembro); if(idx > -1) { BD_MIEMBROS[idx].leccion = selectElement.value; localStorage.setItem('bd_miembros', JSON.stringify(BD_MIEMBROS)); } }
-    function cambiarGPDirecto(idMiembro, selectElement) { const idx = BD_MIEMBROS.findIndex(m => m.id == idMiembro); if(idx > -1) { BD_MIEMBROS[idx].gp_id = selectElement.value; localStorage.setItem('bd_miembros', JSON.stringify(BD_MIEMBROS)); } }
-
-    function procesarCalendarioTrimestral() {
-        const year = parseInt(document.getElementById('cfg_year').value); const trim = parseInt(document.getElementById('cfg_trimestre').value);
-        BD_CONFIG.year = year.toString(); BD_CONFIG.trimestre = trim.toString(); localStorage.setItem('bd_config', JSON.stringify(BD_CONFIG));
-        let startMonth = (trim - 1) * 3; let startDate = new Date(year, startMonth, 1);
-        while(startDate.getDay() !== 6) { startDate.setDate(startDate.getDate() + 1); }
-        let sabados = []; let numSab = 1;
-        while(startDate.getFullYear() === year && Math.floor(startDate.getMonth() / 3) + 1 === trim) {
-            const fStr = startDate.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-            const calPrevio = BD_CALENDARIO.find(c => c.num == numSab);
-            sabados.push({ num: numSab, fecha: fStr, activo: calPrevio ? calPrevio.activo : true, motivo: calPrevio ? calPrevio.motivo : '' });
-            numSab++; startDate.setDate(startDate.getDate() + 7);
-        }
-        BD_CALENDARIO = sabados; localStorage.setItem('bd_calendario', JSON.stringify(BD_CALENDARIO));
-        renderCalendarioConfig(); actualizarSelectSábados(); renderIglesiaUI();
-    }
-
-    function renderCalendarioConfig() {
-        const tbody = document.getElementById('cuerpo-fechas-config'); tbody.innerHTML = '';
-        BD_CALENDARIO.forEach((c, idx) => {
-            tbody.innerHTML += `<tr class="${c.activo ? '' : 'disabled-row'}">
-                <td><strong>Sab ${c.num}</strong></td><td>${c.fecha}</td>
-                <td style="text-align:center;"><input type="checkbox" id="chk_cal_${idx}" ${c.activo?'checked':''} onchange="document.getElementById('mot_cal_${idx}').disabled = this.checked"></td>
-                <td><input type="text" id="mot_cal_${idx}" value="${c.motivo}" ${c.activo?'disabled':''}></td></tr>`;
-        });
-    }
-
-    function guardarExcepcionesFechas() {
-        BD_CALENDARIO.forEach((c, idx) => { c.activo = document.getElementById(`chk_cal_${idx}`).checked; c.motivo = document.getElementById(`mot_cal_${idx}`).value; });
-        localStorage.setItem('bd_calendario', JSON.stringify(BD_CALENDARIO)); actualizarSelectSábados(); renderCalendarioConfig(); alert('📆 Calendario Guardado.');
-    }
-    function actualizarSelectSábados() {
-        ['asig_sabado', 'reporte_gp_sabado'].forEach(cId => {
-            const select = document.getElementById(cId); if(!select) return; select.innerHTML = '';
-            BD_CALENDARIO.forEach(c => { select.innerHTML += `<option value="${c.num}">Sábado ${c.num} (${c.fecha}) ${c.activo?'':'[ESPECIAL]'}</option>`; });
-        });
-    }
-    function renderIglesiaUI() {
-        document.getElementById('lbl-iglesia').innerText = BD_CHURCH.nombre || 'No Configurada';
-        document.getElementById('lbl-periodo').innerText = `${BD_CONFIG.trimestre}º Trimestre - ${BD_CONFIG.year}`;
-        document.getElementById('lbl-distrito').innerText = BD_CHURCH.distrito || '-';
-        document.getElementById('ch_nombre').value = BD_CHURCH.nombre || ''; document.getElementById('ch_lugar').value = BD_CHURCH.lugar || '';
-        document.getElementById('ch_distrito').value = BD_CHURCH.distrito || ''; document.getElementById('ch_asociacion').value = BD_CHURCH.asociacion || '';
-    }
-    function guardarIglesia(e) {
-        e.preventDefault(); BD_CHURCH.nombre = document.getElementById('ch_nombre').value; BD_CHURCH.lugar = document.getElementById('ch_lugar').value;
-        BD_CHURCH.distrito = document.getElementById('ch_distrito').value; BD_CHURCH.asociacion = document.getElementById('ch_asociacion').value;
-        localStorage.setItem('bd_church', JSON.stringify(BD_CHURCH)); renderIglesiaUI(); alert('⛪ Iglesia Guardada.');
-    }
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active');
-        if(tabId === 'tab-asistencia') cargarFiltrosGPAsistencia();
-        if(tabId === 'tab-inf-sabados') generarInformeSabados();
-        if(tabId === 'tab-inf-grupos') generarInformeGruposPequeños();
-        if(tabId === 'tab-inf-depts') generarInformeDepartamentos();
-        if(tabId === 'tab-inf-infantil-cron') generarInformeInfantilCronologico();
-    }
-
-    function guardarGP(e, esDesdeModal) {
-        e.preventDefault();
-        const id = document.getElementById(esDesdeModal ? 'edit_gp_id' : 'gp_id').value;
-        const nombre = document.getElementById(esDesdeModal ? 'edit_gp_nombre' : 'gp_nombre').value;
-        const clasificacion = document.getElementById(esDesdeModal ? 'edit_gp_clasificacion' : 'gp_clasificacion').value;
-        const logo = document.getElementById(esDesdeModal ? 'edit_gp_logo_base64' : 'gp_logo_base64').value || SVG_LOGO_GP;
-        const indexEdit = parseInt(document.getElementById('edit_gp_index').value);
-        if (indexEdit > -1) { BD_GRUPOS[indexEdit] = {id, nombre, clasificacion, logo}; document.getElementById('edit_gp_index').value = "-1"; cerrarModalGP(); } 
-        else { if(BD_GRUPOS.some(g => g.id == id)) { alert("Este número ya existe."); return; } BD_GRUPOS.push({id, nombre, clasificacion, logo}); }
-        localStorage.setItem('bd_grupos', JSON.stringify(BD_GRUPOS)); if(!esDesdeModal) document.getElementById('form-gp').reset();
-        renderGP(); actualizarSelectGrupos(); renderMiembros();
-    }
-    function renderGP() {
-        const tbody = document.querySelector('#tabla-gp tbody'); tbody.innerHTML = '';
-        BD_GRUPOS.sort((a,b)=>a.id-b.id).forEach((g, idx) => {
-            tbody.innerHTML += `<tr><td><strong>GP ${g.id}</strong></td><td><img src="${g.logo}" class="gp-logo"></td><td><strong>${g.nombre}</strong></td>
-                <td><span style="color:var(--royal-blue); font-weight:bold;">${g.clasificacion || 'Adultos'}</span></td>
-                <td><button class="btn-action btn-edit" onclick="editarGP(${idx})">📝 Editar</button><button class="btn-action btn-delete" onclick="eliminarGP(${idx})">❌</button></td></tr>`;
-        });
-    }
-    function editarGP(idx) {
-        const g = BD_GRUPOS[idx]; document.getElementById('edit_gp_id').value = g.id; document.getElementById('edit_gp_nombre').value = g.nombre;
-        document.getElementById('edit_gp_clasificacion').value = g.clasificacion || 'Adultos'; document.getElementById('edit_gp_logo_base64').value = g.logo;
-        document.getElementById('edit_gp_index').value = idx; document.getElementById('modal-gp-overlay').style.display = 'flex';
-    }
-    function eliminarGP(idx) { if(confirm("¿Borrar GP?")) { BD_GRUPOS.splice(idx,1); localStorage.setItem('bd_grupos', JSON.stringify(BD_GRUPOS)); renderGP(); actualizarSelectGrupos(); renderMiembros(); } }
-    function actualizarSelectGrupos() { const s = document.getElementById('m_gp_id'); if(!s) return; s.innerHTML = ''; BD_GRUPOS.forEach(g => { s.innerHTML += `<option value="${g.id}">${g.nombre}</option>`; }); }
-
-    function toggleBautismo() { document.getElementById('box_fecha_bautismo').style.display = document.getElementById('m_bautizado').checked ? 'block' : 'none'; }
-    function calcularEdad(fn) { const g = new Date(fn); const h = new Date(); let e = h.getFullYear() - g.getFullYear(); if (h.getMonth() - g.getMonth() < 0 || (h.getMonth() - g.getMonth() === 0 && h.getDate() < g.getDate())) { e--; } return e; }
-    function obtenerCategoriaEdad(e) { if (e <= 2) return "Cuna"; if (e <= 5) return "Jardín de Infantes"; if (e <= 9) return "Primarios"; if (e <= 12) return "Menores"; if (e <= 14) return "Adolescentes"; if (e <= 18) return "Jóvenes"; if (e <= 35) return "Jóvenes Adultos"; return "Adultos 36"; }
-    function calcularEdadAutomatica() { const f = document.getElementById('m_fecha_nac').value; if(!f) return; document.getElementById('m_edad_ui').value = `${calcularEdad(f)} años (${obtenerCategoriaEdad(calcularEdad(f))})`; }
-
-    function guardarMiembro(e) {
-        e.preventDefault(); const f_nac = document.getElementById('m_fecha_nac').value; const idEdit = document.getElementById('edit_m_id').value;
-        const mData = {
-            nombres: document.getElementById('m_nombre').value, apellidos: document.getElementById('m_apellidos').value, fecha_nac: f_nac, edad: calcularEdad(f_nac), categoria: obtenerCategoriaEdad(calcularEdad(f_nac)), leccion: document.getElementById('m_leccion_tipo').value, foto: document.getElementById('m_foto_base64').value || SVG_AVATAR, bautizado: document.getElementById('m_bautizado').checked, fecha_bautismo: document.getElementById('m_bautizado').checked ? document.getElementById('m_fecha_bautismo').value : '', gp_id: document.getElementById('m_gp_id').value, pareja_num: document.getElementById('m_pareja_num').value, pareja_rol: document.getElementById('m_pareja_rol').value,
-            activo: idEdit !== "-1" ? (BD_MIEMBROS.find(m => m.id == idEdit)?.activo !== false) : true
-        };
-        if(idEdit !== "-1") { const idx = BD_MIEMBROS.findIndex(m => m.id == idEdit); if(idx>-1) BD_MIEMBROS[idx]={...BD_MIEMBROS[idx], ...mData}; document.getElementById('edit_m_id').value = "-1"; }
-        else { mData.id = Date.now(); mData.activo = true; BD_MIEMBROS.push(mData); }
-        localStorage.setItem('bd_miembros', JSON.stringify(BD_MIEMBROS)); cerrarModalMiembro(); renderMiembros();
-    }
-    
-    // FILTROS Y BUSCADOR
-    function renderMiembros() {
-        const tbody = document.querySelector('#tabla-miembros tbody'); tbody.innerHTML = '';
-        
-        const filtroEstado = document.getElementById('filtro_estado_miembros').value;
-        const textoBusqueda = document.getElementById('table_search_input').value.toLowerCase().trim();
-        const criterioOrden = document.getElementById('ordenar_criterio_miembros').value;
-
-        let miembrosFiltrados = BD_MIEMBROS.filter(m => {
-            const esActivo = m.activo !== false;
-            if (filtroEstado === 'activos' && !esActivo) return false;
-            if (filtroEstado === 'inactivos' && esActivo) return false;
-
-            if (textoBusqueda !== "") {
-                const nombreCompleto = `${m.nombres} ${m.apellidos}`.toLowerCase();
-                if (!nombreCompleto.includes(textoBusqueda)) return false;
-            }
-            return true;
-        });
-
-        if (criterioOrden === 'nombre_az') {
-            miembrosFiltrados.sort((a, b) => `${a.apellidos} ${a.nombres}`.localeCompare(`${b.apellidos} ${b.nombres}`));
-        } else if (criterioOrden === 'nombre_za') {
-            miembrosFiltrados.sort((a, b) => `${b.apellidos} ${b.nombres}`.localeCompare(`${a.apellidos} ${a.nombres}`));
-        } else if (criterioOrden === 'edad_menor') {
-            miembrosFiltrados.sort((a, b) => a.edad - b.edad);
-        } else if (criterioOrden === 'edad_mayor') {
-            miembrosFiltrados.sort((a, b) => b.edad - a.edad);
+        // Configuración y relación obligatoria con la Venta #3 de Tacos a $12.00
+        if (db.sales && db.sales.length >= 3) {
+            currentSale = db.sales[2];
+            currentSale.price = 12.00;
         } else {
-            miembrosFiltrados.sort((a, b) => a.id - b.id);
+            currentSale = db.sales.find(s => s.id === 'SALE_3' || s.title.toLowerCase().includes('taco')) || {
+                id: 'SALE_3',
+                title: 'Venta #3 - Tacos',
+                price: 12.00,
+                date: new Date().toISOString().split('T')[0]
+            };
         }
 
-        miembrosFiltrados.forEach(m => {
-            const esActivo = m.activo !== false;
-            const selectFolleto = `<select onchange="cambiarFolletoDirecto(${m.id}, this)" class="select-inline-table">
-                <option value="Fisica" ${m.leccion==='Fisica'?'selected':''}>📕 Física</option>
-                <option value="Digital" ${m.leccion==='Digital'?'selected':''}>📱 Digital</option>
-                <option value="No" ${m.leccion==='No'?'selected':''}>❌ No tiene</option>
-            </select>`;
+        document.getElementById('eventTitle').innerText = `${currentSale.title} ($${currentSale.price.toFixed(2)} c/u)`;
 
-            let selectGP = `<select onchange="cambiarGPDirecto(${m.id}, this)" class="select-inline-table">`;
-            BD_GRUPOS.forEach(g => { selectGP += `<option value="${g.id}" ${m.gp_id == g.id ? 'selected' : ''}>GP ${g.id}: ${g.nombre}</option>`; });
-            if(BD_GRUPOS.length === 0) { selectGP += `<option value="1">GP 1</option>`; }
-            selectGP += `</select>`;
-            
-            tbody.innerHTML += `<tr class="${esActivo ? '' : 'inactive-member'}">
-                <td style="text-align:center;"><img src="${m.foto}" class="avatar-preview" title="Cambiar foto" onclick="dispararSelectorFotoTabla(${m.id})"></td>
-                <td><strong>${m.apellidos}, ${m.nombres}</strong></td>
-                <td>${selectFolleto}</td>
-                <td><strong>${m.edad} años</strong></td>
-                <td>${selectGP}</td>
-                <td style="text-align:center;">
-                    <input type="checkbox" ${esActivo ? 'checked' : ''} onchange="alternarEstatusMiembroDirecto(${m.id}, this)">
-                    <span style="font-size:11px; font-weight:bold;">${esActivo ? ' Activo' : ' Inactivo'}</span>
-                </td>
-                <td><button class="btn-action btn-edit" onclick="editarMiembro(${m.id})">📝 Editar</button><button class="btn-action btn-delete" onclick="eliminarMiembro(${m.id})">❌</button></td></tr>`;
-        });
-    }
-
-    function editarMiembro(id) {
-        const m = BD_MIEMBROS.find(x => x.id == id); if(!m) return;
-        document.getElementById('m_nombre').value = m.nombres; document.getElementById('m_apellidos').value = m.apellidos;
-        document.getElementById('m_fecha_nac').value = m.fecha_nac; document.getElementById('m_leccion_tipo').value = m.leccion;
-        document.getElementById('m_foto_base64').value = m.foto; document.getElementById('m_bautizado').checked = m.bautizado;
-        document.getElementById('m_fecha_bautismo').value = m.fecha_bautismo || ''; document.getElementById('m_gp_id').value = m.gp_id;
-        document.getElementById('m_pareja_num').value = m.pareja_num || "3"; document.getElementById('m_pareja_rol').value = m.pareja_rol || "1";
-        document.getElementById('edit_m_id').value = m.id; calcularEdadAutomatica(); toggleBautismo();
-        document.getElementById('modal-m-titulo').innerText = "📝 Editar Datos Base"; abrirModalMiembro(false);
-    }
-    function eliminarMiembro(id) { if(confirm("¿Eliminar permanente?")) { BD_MIEMBROS = BD_MIEMBROS.filter(m => m.id != id); localStorage.setItem('bd_miembros', JSON.stringify(BD_MIEMBROS)); renderMiembros(); } }
-
-    function cargarFiltrosGPAsistencia() { const filtro = document.getElementById('asig_gp_filtro'); filtro.innerHTML = ''; BD_GRUPOS.forEach(g => { filtro.innerHTML += `<option value="${g.id}">${g.nombre}</option>`; }); cargarFormularioAsistencia(); }
-    function cargarFormularioAsistencia() {
-        const gp = document.getElementById('asig_gp_filtro').value; const sabadoNum = document.getElementById('asig_sabado').value;
-        const tbody = document.getElementById('cuerpo-asistencia'); tbody.innerHTML = ''; const sabadoObj = BD_CALENDARIO.find(c => c.num == sabadoNum); if(!sabadoObj) return;
-        if(!sabadoObj.activo) {
-            document.getElementById('box-reunion-gp-captura').style.display = 'none'; document.getElementById('tabla-pasar-lista').style.display = 'none'; document.getElementById('btn-save-asistencia').style.display = 'none';
-            document.getElementById('msg-sabado-deshabilitado').style.display = 'block'; document.getElementById('txt-motivo-deshabilitado').innerText = sabadoObj.motivo || 'No especificado'; return;
+        // Cargar diccionario de clientes registrados
+        if (db.orders) {
+            db.orders.forEach(o => {
+                if (o.client && o.phone) db.clients[o.client.trim().toLowerCase()] = o.phone.trim();
+            });
         }
-        document.getElementById('box-reunion-gp-captura').style.display = 'flex'; document.getElementById('tabla-pasar-lista').style.display = 'table'; document.getElementById('btn-save-asistencia').style.display = 'block'; document.getElementById('msg-sabado-deshabilitado').style.display = 'none';
-        if(!gp) return;
-        const dR = BD_GP_REUNIONES[`${sabadoNum}_${gp}`] || { reunido: false, miembros: 0, visitas: 0 };
-        document.getElementById('gp_reunido_chk').checked = dR.reunido; document.getElementById('gp_num_miembros').value = dR.miembros; document.getElementById('gp_num_visitas').value = dR.visitas;
-        let deEsteGPActivos = BD_MIEMBROS.filter(m => m.gp_id == gp && m.activo !== false);
-        deEsteGPActivos.sort((a,b)=> a.pareja_num !== b.pareja_num ? a.pareja_num - b.pareja_num : a.pareja_rol - b.pareja_rol);
-        let l = 1;
-        deEsteGPActivos.forEach(m => {
-            const d = BD_REGISTROS[`${sabadoNum}_${m.id}`] || { asis: false, estDia: 0, estB: 0, contM: 0, ayu: 0 };
-            tbody.innerHTML += `<tr><td><strong>${l++}</strong></td><td><small>${nombresParejas[m.pareja_num] || 'Pareja'} (I-${m.pareja_rol})</small></td><td><strong>${m.apellidos}, ${m.nombres}</strong></td>
-                <td style="text-align:center;"><input type="checkbox" name="asis_${m.id}" ${d.asis ? 'checked' : ''}></td>
-                <td><select name="estDia_${m.id}"><option value="0" ${d.estDia==0?'selected':''}>0 días</option><option value="7" ${d.estDia==7?'selected':''}>7 días (Fiel)</option></select></td>
-                <td><input type="number" name="estB_${m.id}" value="${d.estB}" min="0"></td><td><input type="number" name="contM_${m.id}" value="${d.contM}" min="0"></td><td><input type="number" name="ayu_${m.id}" value="${d.ayu}" min="0"></td></tr>`;
-        });
-    }
-    function guardarAsistenciaTrimestral(e) {
-        e.preventDefault(); const gp = document.getElementById('asig_gp_filtro').value; const sabado = document.getElementById('asig_sabado').value;
-        BD_GP_REUNIONES[`${sabado}_${gp}`] = { reunido: document.getElementById('gp_reunido_chk').checked, miembros: parseInt(document.getElementById('gp_num_miembros').value) || 0, visitas: parseInt(document.getElementById('gp_num_visitas').value) || 0 };
-        localStorage.setItem('bd_gp_reuniones', JSON.stringify(BD_GP_REUNIONES));
-        BD_MIEMBROS.filter(m => m.gp_id == gp && m.activo !== false).forEach(m => {
-            BD_REGISTROS[`${sabado}_${m.id}`] = { asis: document.querySelector(`[name="asis_${m.id}"]`).checked, estDia: parseInt(document.querySelector(`[name="estDia_${m.id}"]`).value), estB: parseInt(document.querySelector(`[name="estB_${m.id}"]`).value) || 0, contM: parseInt(document.querySelector(`[name="contM_${m.id}"]`).value) || 0, ayu: parseInt(document.querySelector(`[name="ayu_${m.id}"]`).value) || 0 };
-        }); localStorage.setItem('bd_registros', JSON.stringify(BD_REGISTROS)); alert('🎉 Registro Guardado.');
+        updateDatalist();
+        calculateTotal();
+    };
+
+    function updateDatalist() {
+        const dl = document.getElementById('clientsDatalist');
+        dl.innerHTML = Object.keys(db.clients).map(k => `<option value="${k.replace(/\b\w/g, l => l.toUpperCase())}">`).join('');
     }
 
-    // INFORMES
-    function generarInformeSabados() {
-        const tbody = document.getElementById('cuerpo-informe-sabados'); tbody.innerHTML = '';
-        let gAsis=0, gFis=0, gDig=0, gFiel=0, gEstB=0, gContM=0, gAyu=0, gGPs=0, gVis=0;
-        BD_CALENDARIO.forEach(c => {
-            if(!c.activo) { tbody.innerHTML += `<tr class="disabled-row"><td><strong>Sab ${c.num}</strong></td><td colspan="9">SIN REPORTE: ${c.motivo}</td></tr>`; return; }
-            let sAsis=0, sFis=0, sDig=0, sFiel=0, sEstB=0, sContM=0, sAyu=0, sGPs=0, sVis=0;
-            BD_MIEMBROS.forEach(m => { const d = BD_REGISTROS[`${c.num}_${m.id}`]; if(d) { if(d.asis){ sAsis++; if(m.leccion==='Fisica') sFis++; if(m.leccion==='Digital') sDig++; } if(d.estDia===7) sFiel++; sEstB+=d.estB; sContM+=d.contM; sAyu+=d.ayu; } });
-            BD_GRUPOS.forEach(g => { const r = BD_GP_REUNIONES[`${c.num}_${g.id}`]; if(r) { if(r.reunido) sGPs++; sVis+=r.visitas; } });
-            gAsis+=sAsis; gFis+=sFis; gDig+=sDig; gFiel+=sFiel; gEstB+=sEstB; gContM+=sContM; gAyu+=sAyu; gGPs+=sGPs; gVis+=sVis;
-            tbody.innerHTML += `<tr><td>Sab ${c.num} (${c.fecha})</td><td>${sAsis}</td><td>${sFis}</td><td>${sDig}</td><td>${sFiel}</td><td>${sEstB}</td><td>${sContM}</td><td>${sAyu}</td><td>${sGPs}</td><td>${sVis}</td></tr>`;
-        }); tbody.innerHTML += `<tr class="total-row"><td>TOTAL GENERAL</td><td>${gAsis}</td><td>${gFis}</td><td>${gDig}</td><td>${gFiel}</td><td>${gEstB}</td><td>${gContM}</td><td>${gAyu}</td><td>${gGPs}</td><td>${gVis}</td></tr>`;
+    function autoFillPhone() {
+        const name = document.getElementById('clientName').value.trim().toLowerCase();
+        if (db.clients[name]) {
+            document.getElementById('clientPhone').value = db.clients[name];
+        }
     }
-    function generarInformeGruposPequeños() {
-        const tbody = document.getElementById('cuerpo-informe-gps'); tbody.innerHTML = ''; const sNum = document.getElementById('reporte_gp_sabado').value; if(!sNum || BD_GRUPOS.length === 0) return;
-        let tAsis=0, tFiel=0, tEstB=0, tContM=0, tAyu=0, tReuM=0, tReuV=0;
-        BD_GRUPOS.forEach(g => {
-            const miembrosActivos = BD_MIEMBROS.filter(m => m.gp_id == g.id && m.activo !== false); let sAsis=0, sFiel=0, sEstB=0, sContM=0, sAyu=0;
-            miembrosActivos.forEach(m => { const d = BD_REGISTROS[`${sNum}_${m.id}`]; if(d) { if(d.asis) sAsis++; if(d.estDia===7) sFiel++; sEstB+=d.estB; sContM+=d.contM; sAyu+=d.ayu; } });
-            const r = BD_GP_REUNIONES[`${sNum}_${g.id}`] || { reunido: false, miembros: 0, visitas: 0 };
-            tAsis+=sAsis; tFiel+=sFiel; tEstB+=sEstB; tContM+=sContM; tAyu+=sAyu; tReuM+=r.miembros; tReuV+=r.visitas;
-            tbody.innerHTML += `<tr><td><strong>${g.nombre} (GP ${g.id})</strong></td><td>${r.reunido?'✅ Sí':'❌ No'}</td><td>${sAsis} / ${miembrosActivos.length}</td><td>${sFiel}</td><td>${sEstB}</td><td>${sContM}</td><td>${sAyu}</td><td>${r.miembros}</td><td>${r.visitas}</td></tr>`;
-        }); tbody.innerHTML += `<tr class="total-row"><td colspan="2">TOTAL SEMANAL</td><td>${tAsis}</td><td>${tFiel}</td><td>${tEstB}</td><td>${tContM}</td><td>${tAyu}</td><td>${tReuM}</td><td>${tReuV}</td></tr>`;
+
+    function changeQty(delta) {
+        const input = document.getElementById('orderQty');
+        let val = parseInt(input.value) || 1;
+        val += delta;
+        if (val < 1) val = 1;
+        input.value = val;
+        calculateTotal();
     }
-    function generarInformeDepartamentos() {
-        const tbody = document.getElementById('cuerpo-informe-departamentos'); tbody.innerHTML = '';
-        ["Infantiles", "Juvenil", "Adultos"].forEach(dName => {
-            const mDeEsteDept = BD_MIEMBROS.filter(m => obtenerDepartamento(m.categoria) === dName); let cumAsis=0, cumFiel=0, cumEstB=0, cumContM=0, cumAyu=0;
-            BD_CALENDARIO.forEach(c => { if(!c.activo) return; mDeEsteDept.forEach(m => { const d = BD_REGISTROS[`${c.num}_${m.id}`]; if(d) { if(d.asis) cumAsis++; if(d.estDia===7) cumFiel++; cumEstB+=d.estB; cumContM+=d.contM; cumAyu+=d.ayu; } }); });
-            tbody.innerHTML += `<tr><td><strong>${dName}</strong></td><td><strong>${mDeEsteDept.length} miembros</strong></td><td>${cumAsis}</td><td>${cumFiel}</td><td>${cumEstB}</td><td>${cumContM}</td><td>${cumAyu}</td></tr>`;
-        });
+
+    function calculateTotal() {
+        const price = currentSale ? currentSale.price : 12.00;
+        const qty = parseInt(document.getElementById('orderQty').value) || 0;
+        document.getElementById('calculatedTotal').innerText = (qty * price).toFixed(2);
     }
-    function generarInformeInfantilCronologico() {
-        const tbody = document.getElementById('cuerpo-infantil-cron'); tbody.innerHTML = ''; const niñosInscritos = BD_MIEMBROS.filter(m => obtenerDepartamento(m.categoria) === "Infantiles");
-        BD_CALENDARIO.forEach(c => {
-            if(!c.activo) { tbody.innerHTML += `<tr class="disabled-row"><td><strong>Sab ${c.num}</strong></td><td colspan="5">Sábado Especial - Sin reporte infantil</td></tr>`; return; }
-            let nAsis=0, nFis=0, nDig=0, nFiel=0;
-            niñosInscritos.forEach(m => { const d = BD_REGISTROS[`${c.num}_${m.id}`]; if(d) { if(d.asis) { nAsis++; if(m.leccion==='Fisica') nFis++; if(m.leccion==='Digital') nDig++; } if(d.estDia===7) nFiel++; } });
-            tbody.innerHTML += `<tr><td>Sab ${c.num} (${c.fecha})</td><td><strong>${niñosInscritos.length} niños</strong></td><td>${nAsis}</td><td>${nFis}</td><td>${nDig}</td><td>${nFiel}</td></tr>`;
+
+    function handleSendOrder(e) {
+        e.preventDefault();
+
+        const client = document.getElementById('clientName').value.trim();
+        const phone = document.getElementById('clientPhone').value.trim();
+        const qty = parseInt(document.getElementById('orderQty').value);
+        const total = qty * currentSale.price;
+        const dateStr = new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+
+        lastCreatedOrder = {
+            id: 'ORD_' + Date.now(),
+            saleId: currentSale.id,
+            client: client,
+            phone: phone,
+            qty: qty,
+            total: total,
+            status: 'Debe',
+            abono: 0,
+            debt: total,
+            delivered: false,
+            datetime: dateStr
+        };
+
+        // Guardar el pedido y precargar/actualizar la lista de clientes
+        db.orders.push(lastCreatedOrder);
+        db.clients[client.toLowerCase()] = phone;
+        localStorage.setItem('gerisin_sales_db', JSON.stringify(db));
+
+        // Sincronizar en segundo plano con Google Sheets
+        if (db.config && db.config.scriptUrl) {
+            fetch(db.config.scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'ORDER', ...lastCreatedOrder })
+            }).catch(err => console.log('Sync error:', err));
+        }
+
+        // Cargar los datos en el ticket
+        document.getElementById('tkDate').innerText = dateStr;
+        document.getElementById('tkClient').innerText = client;
+        document.getElementById('tkPhone').innerText = phone;
+        document.getElementById('tkProduct').innerText = currentSale.title;
+        document.getElementById('tkQty').innerText = `${qty} pzs`;
+        document.getElementById('tkTotal').innerText = total.toFixed(2);
+
+        // Cambiar vista al resumen
+        document.getElementById('clientOrderForm').style.display = 'none';
+        document.getElementById('orderSuccessView').style.display = 'block';
+    }
+
+    function downloadTicketImage() {
+        const ticketEl = document.getElementById('ticketSquareContainer');
+        html2canvas(ticketEl, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Ticket_${lastCreatedOrder.client}_Tacos.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         });
     }
 
-    // RESPALDOS
-    function exportarDatos() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localStorage)); const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Respaldo_Escuela_Sabatica_Full.json"); dl.click(); }
-    function importarDatos() {
-        const input = document.createElement('input'); input.type = 'file'; input.accept = '.json'; input.onchange = e => {
-            const file = e.target.files[0]; const reader = new FileReader(); reader.readAsText(file,'UTF-8'); reader.onload = ev => {
-                try {
-                    const content = JSON.parse(ev.target.result);
-                    if (content.bd_miembros) {
-                        let listaMiembros = content.bd_miembros; if (typeof listaMiembros === 'string') { listaMiembros = JSON.parse(listaMiembros); }
-                        listaMiembros = listaMiembros.map(m => { if (m.activo === undefined) m.activo = true; return m; }); localStorage.setItem('bd_miembros', JSON.stringify(listaMiembros));
-                    }
-                    for (const k in content) { if (k !== 'bd_miembros') { localStorage.setItem(k, typeof content[k] === 'object' ? JSON.stringify(content[k]) : content[k]); } }
-                    let gpsActuales = JSON.parse(localStorage.getItem('bd_grupos')) || [];
-                    if (gpsActuales.length === 0) { gpsActuales.push({id: "1", nombre: "Grupo Pequeño 1", clasificacion: "Adultos", logo: SVG_LOGO_GP}); localStorage.setItem('bd_grupos', JSON.stringify(gpsActuales)); }
-                    alert('💾 ¡Datos importados con éxito!'); location.reload();
-                } catch (err) { alert('❌ Error: ' + err.message); }
-            }
-        }; input.click();
+    function shareWhatsAppMessage() {
+        if (!lastCreatedOrder) return;
+
+        let msg = `Hola, realizo un pedido para *${lastCreatedOrder.client}*:\n\n`;
+        msg += `• *Producto:* ${currentSale.title}\n`;
+        msg += `• *Cantidad:* ${lastCreatedOrder.qty} pzs\n`;
+        msg += `• *Total:* $${lastCreatedOrder.total.toFixed(2)}\n`;
+        msg += `• *Estado:* Pendiente de pago al recibir\n`;
+        msg += `• *WhatsApp del cliente:* ${lastCreatedOrder.phone}\n\n`;
+        msg += `¡Adjunto la imagen de mi pedido!`;
+
+        const url = `https://wa.me/52${TARGET_PHONE}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
     }
 
-    window.onload = function() { renderIglesiaUI(); if(BD_CALENDARIO.length === 0) { procesarCalendarioTrimestral(); } else { renderCalendarioConfig(); actualizarSelectSábados(); } renderGP(); actualizarSelectGrupos(); renderMiembros(); }
+    function resetOrderView() {
+        document.getElementById('clientOrderForm').reset();
+        document.getElementById('orderQty').value = 1;
+        calculateTotal();
+        document.getElementById('orderSuccessView').style.display = 'none';
+        document.getElementById('clientOrderForm').style.display = 'block';
+        updateDatalist();
+    }
 </script>
+
 </body>
 </html>
